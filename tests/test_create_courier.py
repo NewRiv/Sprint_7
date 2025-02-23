@@ -1,20 +1,13 @@
 import requests
 import allure
-import pytest
+
+from conftest import registered_courier_data
 from data.data_URL import url
 from data.courier_data import generation_new_data_courier
-from data.courier_data import register_new_courier_and_return_login_password
+
 import logging
 
 
-@pytest.fixture
-def registered_courier_data():
-    login_pass = register_new_courier_and_return_login_password()
-    return {
-        "login": login_pass[0],
-        "password": login_pass[1],
-        "firstName": login_pass[2]
-    }
 
 
 class TestCreateCourier:
@@ -26,7 +19,7 @@ class TestCreateCourier:
         data.pop("firstName")
         payload = data
         logging.info(f"Data for courier creation: {data}")
-        print(data)
+
 
         response = requests.post(f"{url}/api/v1/courier", data=payload)
         assert response.status_code == 201
@@ -40,11 +33,8 @@ class TestCreateCourier:
         assert login_response.status_code == 200, "Login failed."
 
         courier_id = login_response.json().get("id")
-        assert courier_id is not None, "Курьер с идентификатором {courierId} не найден"
+        assert courier_id is not None, f"Курьер с идентификатором {courier_id} не найден"
 
-        # Delete the created courier
-        delete_response = requests.delete(f"{url}/api/v1/courier/{courier_id}")
-        assert delete_response.status_code == 200, "Failed to delete courier."
 
     @allure.title('Проверка невозможности создать курьера. дублирующие креды')
     @allure.description('Проверка, что нельзя создать курьера с уже существующеми кредами (код - 409 и текст - "message": "Этот логин уже используется. Попробуйте другой."')
